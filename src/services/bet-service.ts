@@ -26,7 +26,6 @@ class BetService {
     const betAmount = betData.betAmount;
     const roundId = uuidv4();
     const debitTxnId = uuidv4();
-    console.log("debit id", debitTxnId);
     const debitPayload: DebitWebHookData = {
       txn_id: debitTxnId,
       user_id: userData.user_id,

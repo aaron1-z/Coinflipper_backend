@@ -9,6 +9,6 @@ export const gameSettlementsTable = `
     winning_result ENUM('heads', 'tails') NOT NULL,
     win_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (settlement_id),
+    PRIMARY KEY (settlement_id)
   ); 
 `

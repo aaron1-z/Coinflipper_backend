@@ -1,5 +1,3 @@
-//Types for requests/responses from external APIs
-
 export interface AppConfig {
     port : number;
     serviceBaseUrl : string;

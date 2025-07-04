@@ -1,4 +1,3 @@
-// Defines user object structure used across user modules
 export interface RawUserData {
     user_id: string;
     operatorId: string;

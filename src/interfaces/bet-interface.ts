@@ -1,5 +1,3 @@
-// Type definition for bet structure used in game logic
-
 export interface UserBet {
     amount : number;
     choice : 'heads' | 'tails' ;

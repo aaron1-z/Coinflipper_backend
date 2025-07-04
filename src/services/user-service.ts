@@ -44,13 +44,13 @@ export const getUserDataFromSource = async (
 
     } catch (error) {
         if (axios.isAxiosError(error)) {
-            console.error('[getUserDataFromSource] Axios Error:', error.response?.data || error.message);
+            console.error('getUserDataFromSource Axios Error:', error.response?.data || error.message);
         } 
         else if (error instanceof Error) {
-            console.error('[getUserDataFromSource] Generic Error:', error.message);
+            console.error('getUserDataFromSource Generic Error:', error.message);
         } 
         else {
-            console.error('[getUserDataFromSource] Unknown Error:', error);
+            console.error('getUserDataFromSource Unknown Error:', error);
         }
         
         return false;

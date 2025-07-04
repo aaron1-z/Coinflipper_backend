@@ -15,13 +15,10 @@ export const initializeRedis = async (): Promise<void> => {
   while (retries < MAX_CONNECTION_RETRIES) {
     try {
       redisClient = new Redis(appConfig.redisUrl);
-      console.log(`Attempting Redis connection (Attempt ${retries + 1}/${MAX_CONNECTION_RETRIES})`);
-
       await redisClient.ping();
       console.log("Redis connection successful");
       return;
     } catch (err) {
-      console.error(`Connection attempt ${retries + 1} failed:`, err.message);
       retries++;
 
       if (retries >= MAX_CONNECTION_RETRIES) {

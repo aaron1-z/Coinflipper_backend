@@ -6,7 +6,7 @@ function requireEnv(name:string):
 string {
     const value = process.env[name];
     if(!value) {
-        throw new Error(`FATAL:Environment variable ${name} is required but not defined.`);
+        throw new Error(`Environment variable ${name} is required but not defined.`);
     }
     return value;
 }
@@ -15,7 +15,7 @@ function requireNumberEnv(name:string): number {
     const value = requireEnv(name);
     const num = Number(value);
     if(isNaN(num)){
-        throw new Error(`FATAL: Environment variable ${name} must be a valid number. Received"${value}"`);
+        throw new Error(`Environment variable ${name} must be a valid number. Received"${value}"`);
     }
     return num;
 

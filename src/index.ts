@@ -6,10 +6,9 @@ import { appConfig } from './utils/app-config';
 import { intializeSocket } from './socket';
 import { initializeRedis } from './utils/redis-connection';
 import { initQueue } from './utils/amqp';
+import { initializeDatabase } from './utils/db-connection'; 
 
 dotenv.config();
-
-
 const PORT = appConfig.port;
 const app = express();
 const httpServer = http.createServer(app);
@@ -21,9 +20,10 @@ const startServer = async () => {
     try {
         await Promise.all([
             initializeRedis(),
-            initQueue()
+            initQueue(),
+            initializeDatabase() 
         ]);
-        console.log('connected to redis and rabbitmq');
+        console.log('connected to redis, rabbitmq and DB');
         intializeSocket(io);
         httpServer.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);

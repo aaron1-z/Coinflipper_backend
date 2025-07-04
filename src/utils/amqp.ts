@@ -15,7 +15,6 @@ export const connect = async (): Promise<void> => {
     if (connected && pubChannel) return;
 
     try {
-        console.log("Connecting to Rabbit-MQ Server...");
         const connection = await amqp.connect(config.amqpConnectionString);
         console.log("Rabbit MQ Connection is ready");
 
@@ -28,25 +27,25 @@ export const connect = async (): Promise<void> => {
         } as Options.AssertExchange);
 
         pubChannel.on("close", () => {
-            console.error("[AMQP] Channel closed.");
+            console.error("AMQP Channel closed.");
             pubChannel = null;
             connected = false;
             setTimeout(initQueue, 5000); 
         });
 
         pubChannel.on("error", (err: unknown) => {
-            console.error("[AMQP] Channel error:", err);
+            console.error("AMQP Channel error:", err);
         });
 
         connection.on("error", (err) => {
-             console.error("[AMQP] Top-Level Connection Error:", err);
+             console.error("AMQP Top-Level Connection Error:", err);
         });
         
         console.log(`Created RabbitMQ Channel and asserted exchange '${exchange}' successfully`);
         connected = true;
     } catch (error: any) {
-        console.error(`[AMQP] Failed to connect: ${error.message}`);
-        console.log("[AMQP] Retrying connection in 5 seconds...");
+        console.error(`AMQP Failed to connect: ${error.message}`);
+        console.log("AMQP Retrying connection in 5 seconds...");
         setTimeout(initQueue, 5000);
     }
 };
@@ -59,7 +58,7 @@ export const sendToQueue = async (
 ): Promise<void> => {
     try {
         if (!pubChannel) {
-            console.error("[AMQP] Channel not available. Message cannot be sent.");
+            console.error("AMQP Channel not available. Message cannot be sent.");
             throw new Error("Publisher channel not initialized");
         }
 
@@ -77,11 +76,11 @@ export const sendToQueue = async (
         );
 
         console.log(
-            `[AMQP] Message sent to queue '${routingKey}' on exchange '${exchangeName}'`
+            `AMQP Message sent to queue '${routingKey}' on exchange '${exchangeName}'`
         );
     } catch (error: any) {
         console.error(
-            `[AMQP] Failed to send message to queue '${routingKey}': ${error.message}`
+            `AMQP Failed to send message to queue '${routingKey}': ${error.message}`
         );
         throw error;
     }
