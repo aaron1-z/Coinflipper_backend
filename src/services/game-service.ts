@@ -1,18 +1,18 @@
+// src/services/bet.service.ts (or your equivalent file)
+
 import { Socket } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 import { BetRequest } from '../interfaces/api-interface';
 import { FinalUserData } from '../interfaces/user-interface';
 import { CreditWebHookData } from '../interfaces/bet-interface';
-import { apiClient } from '../config/api-client';
-import { setCache } from '../utils/redis-connection';
 import { sendToQueue } from '../utils/amqp';
-import {config} from '../config/env-config';
+import { config } from '../config/env-config';
 
 const queueCreditTransaction = async (
     userData: FinalUserData,
     winAmt: number,
     roundId: string,
-    debitTxnId:string
+    debitTxnId: string
 ): Promise<void> => {
     try {
         const creditPayload: CreditWebHookData = {
@@ -31,14 +31,13 @@ const queueCreditTransaction = async (
             token: userData.token,
         };
 
-        console.log(finalMessage);
+        console.log("Preparing to queue credit transaction:", finalMessage);
         
-         await sendToQueue(config.amqpExchangeName, "games_cashout", JSON.stringify(finalMessage));
-
+        await sendToQueue(config.amqpExchangeName, "games_cashout", JSON.stringify(finalMessage));
 
     } catch (error) {
         console.error(
-            `credit failed for user ${userData.userId} in round ${roundId}`,
+            `Credit queueing failed for user ${userData.userId} in round ${roundId}`,
             { error }
         );
     }
@@ -58,30 +57,30 @@ export const processBetResolution = async (
   const winningResult = generateCoinFlipResult(); 
   const playerChoice = betData.choice;
   const betAmount = betData.betAmount;
-
-  socket.emit('round_result', {
-    winningResult: winningResult,
-    yourChoice: playerChoice,
-    roundId: roundId,
-  });
+  let winAmt = 0;
 
   if (playerChoice === winningResult) {
-    const winAmt = betAmount * 2;
+    winAmt = betAmount * 2;
     console.log(`User ${userData.userId} won. Attempting to credit ${winAmt}.`);
 
-     await queueCreditTransaction(userData, winAmt, roundId, debitTxnId);
+    await queueCreditTransaction(userData, winAmt, roundId, debitTxnId);
 
-    const FinalBalance = userData.balance + winAmt;
-    console.log(`Credit successful for ${userData.userId}. New balance: ${FinalBalance}`);
+    const finalBalance = userData.balance + winAmt;
+    console.log(`Credit successful for ${userData.userId}. New balance: ${finalBalance}`);
 
-      socket.emit('user_info', {
+    socket.emit('user_info', {
         user_id: userData.userId,
         operator_id: userData.operatorId,
-        balance: FinalBalance,
-      });
+        balance: finalBalance,
+    });
     
   } else {
     console.log(`User ${userData.userId} lost the bet for round ${roundId}.`);
   }
-
+  socket.emit('round_result', {
+    winningResult: winningResult,
+    yourChoice: playerChoice,
+    roundId: roundId,
+    winAmount: winAmt
+  });
 };
