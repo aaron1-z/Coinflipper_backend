@@ -26,6 +26,7 @@ class BetService {
     const betAmount = betData.betAmount;
     const roundId = uuidv4();
     const debitTxnId = uuidv4();
+    console.log("debit id", debitTxnId);
     const debitPayload: DebitWebHookData = {
       txn_id: debitTxnId,
       user_id: userData.user_id,
@@ -35,6 +36,7 @@ class BetService {
       description: `Bet of ${betAmount.toFixed(2)} on ${betData.choice} for Coin Flipper round ${roundId}`,
       txn_type: 0,
     };
+    
 
     const isDebitSuccessful = await this._debitUserBalanceAPI(debitPayload, userData.token);
 

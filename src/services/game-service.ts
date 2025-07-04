@@ -1,41 +1,47 @@
 import { Socket } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
-import axios from 'axios';
 import { BetRequest } from '../interfaces/api-interface';
 import { FinalUserData } from '../interfaces/user-interface';
 import { CreditWebHookData } from '../interfaces/bet-interface';
 import { apiClient } from '../config/api-client';
 import { setCache } from '../utils/redis-connection';
+import { sendToQueue } from '../utils/amqp';
+import {config} from '../config/env-config';
 
-const executeCreditAPI = async (creditPayload: CreditWebHookData, token: string): Promise<boolean> => {
-  try {
-    const response = await apiClient.post('/service/operator/user/balance/v2', creditPayload, {
-      headers: { token },
-    });
-    return response.data?.status === true;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-        console.error(' Axios Error:', error.response?.data || error.message);
-    } else {
-        console.error(' Error:', error);
+const queueCreditTransaction = async (
+    userData: FinalUserData,
+    winAmt: number,
+    roundId: string,
+    debitTxnId:string
+): Promise<void> => {
+    try {
+        const creditPayload: CreditWebHookData = {
+            txn_id: uuidv4(),
+            user_id: userData.user_id,
+            game_id: userData.game_id,
+            txn_ref_id: debitTxnId,
+            amount: winAmt.toFixed(2),
+            description: `Winnings of ${winAmt.toFixed(2)} for Coin Flipper round ${roundId}`,
+            txn_type: 1,
+        };
+
+        const finalMessage = {
+            ...creditPayload,
+            operatorId: userData.operatorId,
+            token: userData.token,
+        };
+
+        console.log(finalMessage);
+        
+         await sendToQueue(config.amqpExchangeName, "games_cashout", JSON.stringify(finalMessage));
+
+
+    } catch (error) {
+        console.error(
+            `credit failed for user ${userData.userId} in round ${roundId}`,
+            { error }
+        );
     }
-    return false;
-  }
-};
-
-const processBetCredit = async (userData: FinalUserData, winAmt: number, roundId: string, debitTxnId: string) => {
-  const creditPayload: CreditWebHookData = {
-    txn_id: uuidv4(),
-    user_id: userData.user_id,
-    game_id: userData.game_id,
-    txn_ref_id: debitTxnId,
-    amount: winAmt.toFixed(2),
-    description: `Winnings of ${winAmt.toFixed(2)} for Coin Flipper round ${roundId}`,
-    txn_type: 1,
-  };
-
-  const isCreditSuccessful = await executeCreditAPI(creditPayload, userData.token);
-  return { status: isCreditSuccessful };
 };
 
 const generateCoinFlipResult = (): 'heads' | 'tails' => {
@@ -63,24 +69,19 @@ export const processBetResolution = async (
     const winAmt = betAmount * 2;
     console.log(`User ${userData.userId} won. Attempting to credit ${winAmt}.`);
 
-    const creditResult = await processBetCredit(userData, winAmt, roundId, debitTxnId);
+     await queueCreditTransaction(userData, winAmt, roundId, debitTxnId);
 
-    if (creditResult.status) {
-      userData.balance += winAmt;
-      const redisKey = `PL:${socket.id}`;
-      await setCache(redisKey, JSON.stringify(userData));
+    const FinalBalance = userData.balance + winAmt;
+    console.log(`Credit successful for ${userData.userId}. New balance: ${FinalBalance}`);
 
-      console.log(`- GameService: Credit successful for ${userData.userId}. New balance: ${userData.balance}`);
       socket.emit('user_info', {
         user_id: userData.userId,
         operator_id: userData.operatorId,
-        balance: userData.balance,
+        balance: FinalBalance,
       });
-    } else {
-      console.error(` Credit failed for user ${userData.userId}, round ${roundId}`);
-      socket.emit('error', { message: 'Winnings could not be credited' });
-    }
+    
   } else {
     console.log(`User ${userData.userId} lost the bet for round ${roundId}.`);
   }
+
 };

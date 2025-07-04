@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { appConfig } from './utils/app-config';
 import { intializeSocket } from './socket';
 import { initializeRedis } from './utils/redis-connection';
+import { initQueue } from './utils/amqp';
 
 dotenv.config();
 
@@ -18,7 +19,11 @@ const io = new Server(httpServer, {
 
 const startServer = async () => {
     try {
-        await initializeRedis();
+        await Promise.all([
+            initializeRedis(),
+            initQueue()
+        ]);
+        console.log('connected to redis and rabbitmq');
         intializeSocket(io);
         httpServer.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
