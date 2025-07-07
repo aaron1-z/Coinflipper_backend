@@ -18,13 +18,12 @@ const io = new Server(httpServer, {
 
 const startServer = async () => {
     try {
-        await Promise.all([
-            initializeRedis(),
-            initQueue(),
-            initializeDatabase() 
-        ]);
-        console.log('connected to redis, rabbitmq and DB');
+        await initializeRedis();
+           await initQueue();
+           await initializeDatabase() ;
+
         intializeSocket(io);
+    
         httpServer.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });
