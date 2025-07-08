@@ -8,7 +8,7 @@ import { config } from '../config/env-config';
 import { delay } from '../utils/helpers';
 import { saveSettlementRecord } from './settlement-service';
 
-const queueCreditTransaction = async (
+const CreditTransaction = async (
     userData: FinalUserData,
     winAmt: number,
     roundId: string,
@@ -50,7 +50,7 @@ const generateCoinFlipResult = (): 'heads' | 'tails' => {
   return Math.random() < 0.5 ? 'heads' : 'tails';
 };
 
-export const processBetResolution = async (
+export const BetResolution = async (
   socket: Socket,
   userData: FinalUserData,
   betData: BetRequest,
@@ -69,7 +69,7 @@ export const processBetResolution = async (
     winAmt = betAmount * 2; 
     console.log(`User ${userData.userId} won. Attempting to credit ${winAmt}.`);
 
-    await queueCreditTransaction(userData, winAmt, roundId, debitTxnId);
+    await CreditTransaction(userData, winAmt, roundId, debitTxnId);
   
      finalBalance += winAmt;
     console.log(`Credit successful for ${userData.userId}. New balance: ${finalBalance}`);
