@@ -34,7 +34,7 @@ export const placeBetController = async (socket: Socket, betData: BetRequest) =>
 
       console.log(` Bet successful for ${userData.userId}. Round ID: ${debitResult.roundId}`);
       
-      socket.emit('user_info', {
+      socket.emit('info', {
         user_id: userData.userId,
         operator_id: userData.operatorId,
         balance: userData.balance,

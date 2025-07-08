@@ -5,7 +5,8 @@ import { FinalUserData } from '../interfaces/user-interface';
 import { CreditWebHookData } from '../interfaces/bet-interface';
 import { sendToQueue } from '../utils/amqp';
 import { config } from '../config/env-config';
-import { executeQuery } from '../utils/db-connection';
+import { delay } from '../utils/helpers';
+import { saveSettlementRecord } from './settlement-service';
 
 const queueCreditTransaction = async (
     userData: FinalUserData,
@@ -62,23 +63,23 @@ export const processBetResolution = async (
 
   let winAmt = 0;
 
+  let finalBalance = userData.balance;
+
   if (playerChoice === winningResult) {
-    winAmt = betAmount * 2;
+    winAmt = betAmount * 2; 
     console.log(`User ${userData.userId} won. Attempting to credit ${winAmt}.`);
 
     await queueCreditTransaction(userData, winAmt, roundId, debitTxnId);
   
-    const finalBalance = userData.balance + winAmt;
+     finalBalance += winAmt;
     console.log(`Credit successful for ${userData.userId}. New balance: ${finalBalance}`);
-     socket.emit('user_info', {
-        user_id: userData.userId,
-        operator_id: userData.operatorId,
-        balance: finalBalance,
-    });
-    
+
+   
   } else {
     console.log(`User ${userData.userId} lost the bet for round ${roundId}.`);
   }
+
+
   socket.emit('round_result', {
     winningResult: winningResult,
     yourChoice: playerChoice,
@@ -86,30 +87,14 @@ export const processBetResolution = async (
     winAmount: winAmt
   });
 
-  try {
-    const SQL_INSERT_SETTLEMENT = `
-      INSERT INTO settlement(
-        round_id, user_id, operator_id, bet_amount, 
-        player_choice, winning_result, win_amount
-      ) VALUES(?, ?, ?, ?, ?, ?, ?)
-    `;
-  
-   const params = [
-      roundId,
-      userData.user_id,
-      userData.operatorId,
-      betAmount,
-      playerChoice,
-      winningResult,
-      winAmt
-    ];
+  await delay(2000);
 
-    executeQuery(SQL_INSERT_SETTLEMENT, params)
-      .then(() => console.log(`DB Settlement record saved for round ${roundId}`))
-      .catch(err => console.error(`DB_ERROR Failed to save settlement for round ${roundId}`, err));
+    socket.emit('info', {
+        user_id: userData.userId,
+        operator_id: userData.operatorId,
+        balance: finalBalance,
+    });
+    
 
-  } catch (error) {
-      console.error("DB_ERROR Unexpected error preparing settlement data.", error);
-  }
-
+ saveSettlementRecord(roundId, userData, betData, winningResult, winAmt);
 };

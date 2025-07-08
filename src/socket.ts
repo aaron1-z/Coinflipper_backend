@@ -20,12 +20,12 @@ export const intializeSocket = (io: Server) => {
                 socket.disconnect(true);
                 return;
             }
-            
+
             const redisKey = `PL:${socket.id}`;
             await setCache(redisKey, JSON.stringify(userData));
             console.log(`session cached in Redis`); 
             
-            socket.emit('user_info', {
+            socket.emit('info', {
                 user_id: userData.userId,
                 operator_id: userData.operatorId,
                 balance: userData.balance,
