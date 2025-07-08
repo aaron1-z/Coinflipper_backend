@@ -3,7 +3,7 @@ import { BetRequest } from '../interfaces/api-interface';
 import { FinalUserData } from '../interfaces/user-interface';
 import { getCache, setCache } from '../utils/redis-connection';
 import { betService } from '../services/bet-service';
-import { processBetResolution } from '../services/game-service';
+import { BetResolution } from '../services/game-service';
 
 export const placeBetController = async (socket: Socket, betData: BetRequest) => {
   const redisKey = `PL:${socket.id}`;
@@ -40,7 +40,7 @@ export const placeBetController = async (socket: Socket, betData: BetRequest) =>
         balance: userData.balance,
       });
 
-      await processBetResolution(socket, userData, betData, debitResult.roundId, debitResult.debitTxnId);
+      await BetResolution(socket, userData, betData, debitResult.roundId, debitResult.debitTxnId);
 
     } else {
       return socket.emit('bet_error', { message: debitResult.message }); 
