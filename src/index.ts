@@ -7,6 +7,9 @@ import { intializeSocket } from './socket';
 import { initializeRedis } from './utils/redis-connection';
 import { initQueue } from './utils/amqp';
 import { initializeDatabase } from './utils/db-connection'; 
+import {createLogger} from './utils/logger';
+
+const logger = createLogger('Server');
 
 dotenv.config();
 const PORT = appConfig.port;
@@ -25,11 +28,11 @@ const startServer = async () => {
         intializeSocket(io);
     
         httpServer.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
+            logger.info(`Server running on port ${PORT}`);
         });
 
     } catch (err) {
-        console.error(' Server failed to start:', err);
+       logger.fatal({error:err}, 'Server failed to start');
         process.exit(1);
     }
 };

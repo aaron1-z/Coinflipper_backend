@@ -4,9 +4,13 @@ import { FinalUserData } from '../interfaces/user-interface';
 import { getCache, setCache } from '../utils/redis-connection';
 import { betService } from '../services/bet-service';
 import { BetResolution } from '../services/game-service';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('BetController');
 
 export const placeBetController = async (socket: Socket, betData: BetRequest) => {
   const redisKey = `PL:${socket.id}`;
+
   try {
     const userSessionString = await getCache(redisKey);
     if (!userSessionString) {
@@ -18,8 +22,12 @@ export const placeBetController = async (socket: Socket, betData: BetRequest) =>
     }
     const betAmount = betData.betAmount;
     const validChoices = ['heads', 'tails'];
+    
     if (!betData.choice || !validChoices.includes(betData.choice)) {
-      console.error(`-Invalid choice from user ${userData.userId}. Received:`, betData?.choice);
+      logger.error({ 
+          userId: userData.userId, 
+          choice: betData.choice 
+        }, 'Invalid choice received from user.');
       return socket.emit('bet_error', { message: "Invalid choice. Please select 'heads' or 'tails'." });
     }
     if (userData.balance < betAmount) {
@@ -32,7 +40,10 @@ export const placeBetController = async (socket: Socket, betData: BetRequest) =>
       userData.balance -= betAmount;
       await setCache(redisKey, JSON.stringify(userData));
 
-      console.log(` Bet successful for ${userData.userId}. Round ID: ${debitResult.roundId}`);
+      logger.info({
+          userId: userData.userId,
+          roundId: debitResult.roundId
+        }, 'Bet successful and debited.');
       
       socket.emit('info', {
         user_id: userData.userId,
@@ -46,7 +57,11 @@ export const placeBetController = async (socket: Socket, betData: BetRequest) =>
       return socket.emit('bet_error', { message: debitResult.message }); 
     }
   } catch (error: any) {
-    console.error(` Unhandled exception for socket ${socket.id}: ${error.message}`);
+
+    logger.error({
+        socketId: socket.id,
+        error: error.message
+      }, 'Unhandled exception in bet controller.');
     return socket.emit('bet_error', { message: 'An internal server error occurred.' });
   }
 };

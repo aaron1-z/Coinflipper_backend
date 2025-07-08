@@ -1,6 +1,9 @@
 import { executeQuery } from '../utils/db-connection'; 
 import { FinalUserData } from '../interfaces/user-interface';
 import { BetRequest } from '../interfaces/api-interface';
+import {createLogger} from '../utils/logger';
+
+const logger = createLogger('SettlementDB');
 
 const SQL_INSERT_SETTLEMENT = `
   INSERT INTO settlement (
@@ -27,10 +30,10 @@ export const saveSettlementRecord = (
     ];
 
     executeQuery(SQL_INSERT_SETTLEMENT, params)
-      .then(() => console.log(`[DB] Settlement record saved for round ${roundId}`))
-      .catch(err => console.error(`[DB_ERROR] Failed to save settlement for round ${roundId}:`, err));
+      .then(() => logger.info({roundId}, "Settlement record saved"))
+      .catch(err => logger.error({error:err.message}, "Failed to save settlement record"));
 
   } catch (error) {
-    console.error("[DB_ERROR] Unexpected error preparing settlement data:", error);
+    logger.error({error}, "unexpected error");
   }
 };
