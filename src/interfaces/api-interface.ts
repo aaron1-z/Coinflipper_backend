@@ -7,7 +7,11 @@ export interface AppConfig {
     maxCashoutAmount: number;
 }
 
-export interface BetRequest {
+/* export interface BetRequest {
     choice: 'heads' | 'tails';
+    betAmount: number;
+} */
+export interface BetRequest {
+    choice: 1 | 2;
     betAmount: number;
 }

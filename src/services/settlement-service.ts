@@ -19,12 +19,14 @@ export const saveSettlementRecord = (
     winAmount: number
 ): void => {
   try {
+    const playerChoice = betData.choice === 1 ? 'heads' : 'tails' ;
+    
     const params = [
       roundId,
       userData.user_id,
       userData.operatorId,
       betData.betAmount,
-      betData.choice,
+      playerChoice,
       winningResult,
       winAmount
     ];

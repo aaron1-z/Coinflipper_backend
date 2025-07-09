@@ -1,3 +1,10 @@
+export const Bet_choice_map = {
+  1: 'heads',
+  2: 'tails'
+};
+
+export type BetChoice = 1 | 2;
+
 export interface UserBet {
     amount : number;
     choice : 'heads' | 'tails' ;

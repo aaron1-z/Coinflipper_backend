@@ -46,8 +46,8 @@ const CreditTransaction = async (
     }
 };
 
-const generateCoinFlipResult = (): 'heads' | 'tails' => {
-  return Math.random() < 0.5 ? 'heads' : 'tails';
+const generateCoinFlipResult = (): 1 | 2 => {
+  return Math.random() < 0.5 ? 1 : 2;
 };
 
 export const BetResolution = async (
@@ -57,10 +57,11 @@ export const BetResolution = async (
   roundId: string,
   debitTxnId: string
 ) => {
+
   const winningResult = generateCoinFlipResult(); 
   const playerChoice = betData.choice;
   const betAmount = betData.betAmount;
-
+  
   let winAmt = 0;
 
   let finalBalance = userData.balance;
@@ -76,13 +77,17 @@ export const BetResolution = async (
 
    
   } else {
+  
     console.log(`User ${userData.userId} lost the bet for round ${roundId}.`);
   }
 
+    const winningResultString = winningResult === 1 ? 'heads' : 'tails' ;
+    const playerChoiceString = playerChoice === 1 ? 'heads' : 'tails' ;
+
 
   socket.emit('round_result', {
-    winningResult: winningResult,
-    yourChoice: playerChoice,
+    winningResult: winningResultString,
+    yourChoice: playerChoiceString,
     roundId: roundId,
     winAmount: winAmt
   });
@@ -96,5 +101,5 @@ export const BetResolution = async (
     });
     
 
- saveSettlementRecord(roundId, userData, betData, winningResult, winAmt);
+ saveSettlementRecord(roundId, userData, betData, winningResultString, winAmt);
 };

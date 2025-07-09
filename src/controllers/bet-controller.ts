@@ -2,9 +2,10 @@ import { Socket } from 'socket.io';
 import { BetRequest } from '../interfaces/api-interface';
 import { FinalUserData } from '../interfaces/user-interface';
 import { getCache, setCache } from '../utils/redis-connection';
-import { betService } from '../services/bet-service';
+import { processBet } from '../services/bet-service';
 import { BetResolution } from '../services/game-service';
 import { createLogger } from '../utils/logger';
+
 
 const logger = createLogger('BetController');
 
@@ -21,18 +22,18 @@ export const placeBetController = async (socket: Socket, betData: BetRequest) =>
       return socket.emit('bet_error', { message: 'Invalid bet amount.' });
     }
     const betAmount = betData.betAmount;
-    const validChoices = ['heads', 'tails'];
+    const validChoices = [1,2];
 
     if (!betData.choice || !validChoices.includes(betData.choice)) {
       logger.error(`Invalid choice received: ${betData.choice}`);
-      
+
       return socket.emit('bet_error', { message: "Invalid choice. Please select 'heads' or 'tails'." });
     }
     if (userData.balance < betAmount) {
       return socket.emit('bet_error', { message: 'Insufficient balance.' });
     }
     
-    const debitResult = await betService.processBet(userData, betData);
+    const debitResult = await processBet(userData, betData);
 
     if (debitResult.status) {
       userData.balance -= betAmount;
