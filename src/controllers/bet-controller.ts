@@ -22,12 +22,10 @@ export const placeBetController = async (socket: Socket, betData: BetRequest) =>
     }
     const betAmount = betData.betAmount;
     const validChoices = ['heads', 'tails'];
-    
+
     if (!betData.choice || !validChoices.includes(betData.choice)) {
-      logger.error({ 
-          userId: userData.userId, 
-          choice: betData.choice 
-        }, 'Invalid choice received from user.');
+      logger.error(`Invalid choice received: ${betData.choice}`);
+      
       return socket.emit('bet_error', { message: "Invalid choice. Please select 'heads' or 'tails'." });
     }
     if (userData.balance < betAmount) {
@@ -40,10 +38,7 @@ export const placeBetController = async (socket: Socket, betData: BetRequest) =>
       userData.balance -= betAmount;
       await setCache(redisKey, JSON.stringify(userData));
 
-      logger.info({
-          userId: userData.userId,
-          roundId: debitResult.roundId
-        }, 'Bet successful and debited.');
+      logger.info('Bet successful and debited');
       
       socket.emit('info', {
         user_id: userData.userId,
@@ -58,10 +53,8 @@ export const placeBetController = async (socket: Socket, betData: BetRequest) =>
     }
   } catch (error: any) {
 
-    logger.error({
-        socketId: socket.id,
-        error: error.message
-      }, 'Unhandled exception in bet controller.');
+    logger.error(`Unhandled expection: ${error.message}`);
+
     return socket.emit('bet_error', { message: 'An internal server error occurred.' });
   }
 };
